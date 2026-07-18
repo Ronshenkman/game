@@ -46,6 +46,33 @@ function getHost(req) {
 const trackCache = new Map(); // "title||artist" -> track object
 const songIdMap  = new Map(); // "title||artist" -> deezer track id
 
+function isArtistMatch(curated, api) {
+  if (!curated || !api) return false;
+  
+  const clean = (s) => s.toLowerCase()
+    .replace(/[\s\-\'\"\(\)\[\]\.\,\!\?]/g, '')
+    .replace(/^להקת/, '')
+    .replace(/^הפרויקטשל/, '')
+    .replace(/^הפרוייקטשל/, '');
+
+  const cleanCurated = clean(curated);
+  const cleanApi = clean(api);
+  
+  if (cleanCurated.includes(cleanApi) || cleanApi.includes(cleanCurated)) {
+    return true;
+  }
+  
+  const splitWords = (s) => s.toLowerCase()
+    .replace(/[\-\'\"\(\)\[\]\.\,\!\?]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length >= 3 && w !== 'להקת' && w !== 'הפרויקט' && w !== 'הפרוייקט');
+    
+  const wordsCurated = splitWords(curated);
+  const wordsApi = splitWords(api);
+  
+  return wordsCurated.some(w => wordsApi.includes(w));
+}
+
 async function findTrack(song) {
   const cacheKey = `${song.title}||${song.artist}`;
   if (trackCache.has(cacheKey)) return trackCache.get(cacheKey);
@@ -62,7 +89,15 @@ async function findTrack(song) {
       const url = `https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=10`;
       const { data } = await axios.get(url);
       const results = data.data || [];
-      picked = results.find(t => t.preview) || results[0] || null;
+      
+      // Look for a result where preview exists and the artist matches
+      picked = results.find(t => t.preview && isArtistMatch(song.artist, t.artist?.name));
+      
+      // Fallback: if no strict artist match found, use the first with a preview
+      if (!picked) {
+        picked = results.find(t => t.preview) || results[0] || null;
+      }
+      
       if (picked?.preview) break; // found one with preview, done
     } catch (e) {
       console.warn('Deezer query failed:', e.message);
