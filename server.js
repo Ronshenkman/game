@@ -195,7 +195,8 @@ app.get('/api/song', async (req, res) => {
   try {
     if (!track) return res.status(404).json({ error: 'Could not find any available track. Try again.' });
 
-    const playUrl   = `${HOST}/play?id=${track.id}`;
+    const obfuscatedYear = track.year * 7 + 13;
+    const playUrl   = `${HOST}/play?id=${track.id}&y=${obfuscatedYear}`;
     const qrDataUrl = await QRCode.toDataURL(playUrl, {
       width: 400, margin: 2, errorCorrectionLevel: 'M',
       color: { dark: '#000000', light: '#ffffff' },
@@ -220,12 +221,21 @@ app.get('/api/song', async (req, res) => {
 app.get('/api/preview/:trackId', async (req, res) => {
   try {
     const { data } = await axios.get(`https://api.deezer.com/track/${req.params.trackId}`);
+    let year = data.release_date ? parseInt(data.release_date.split('-')[0]) : null;
+
+    if (req.query.y) {
+      const decodedYear = (parseInt(req.query.y) - 13) / 7;
+      if (!isNaN(decodedYear) && decodedYear > 1900 && decodedYear < 2100) {
+        year = Math.round(decodedYear);
+      }
+    }
+
     res.json({
       previewUrl: data.preview || null,
       title:      data.title,
       artist:     data.artist?.name,
       albumArt:   data.album?.cover_xl || data.album?.cover_big || null,
-      year:       data.release_date ? parseInt(data.release_date.split('-')[0]) : null,
+      year:       year,
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to load track' });

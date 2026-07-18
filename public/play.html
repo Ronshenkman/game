@@ -155,10 +155,12 @@
 
   async function init() {
     trackId = new URLSearchParams(window.location.search).get('id');
+    const y = new URLSearchParams(window.location.search).get('y');
     if (!trackId) { showError('No track ID in URL.'); return; }
 
     try {
-      const r = await fetch(`/api/preview/${trackId}`);
+      const url = y ? `/api/preview/${trackId}?y=${y}` : `/api/preview/${trackId}`;
+      const r = await fetch(url);
       if (!r.ok) throw new Error();
       trackData = await r.json();
     } catch {
