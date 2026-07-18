@@ -33,7 +33,7 @@ const SONGS4 = [
   { title: "אהובתי", artist: "משינה", year: 1987 },
   { title: "האגס 1", artist: "אהוד בנאי", year: 1989 },
   { title: "עיר מקלט", artist: "אהוד בנאי", year: 1987 },
-  { title: "טיפ טיפה", artist: "זהבה בן", year: 1992 },
+  { title: "טיפת מזל", artist: "זהבה בן", year: 1989 },
   { title: "עיניים שלי", artist: "יהודה פוליקר", year: 1985 },
   { title: "אפר ואבק", artist: "יהודה פוליקר", year: 1988 },
   { title: "שביל הבריחה", artist: "ריטה", year: 1986 },
