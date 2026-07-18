@@ -49,7 +49,7 @@ const SONGS4 = [
   { title: "אנשים טובים באמצע הדרך", artist: "נעמי שמר", year: 1981 },
   { title: "פנים אל פנים", artist: "בנזין", year: 1982 },
   { title: "אצל הדודה והדוד", artist: "דני סנדרסון", year: 1987 },
-  { title: "גלשן", artist: "דני סנדרסון", year: 1984 },
+  { title: "גלשן", artist: "דני סנדרסון", year: 1982 },
   { title: "רדיו חזק", artist: "תיסלם", year: 1981 },
   { title: "לראות אותה היום", artist: "תיסלם", year: 1981 },
   { title: "בוקר של כיף", artist: "תיסלם", year: 1981 },
