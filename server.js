@@ -46,6 +46,61 @@ function getHost(req) {
 const trackCache = new Map(); // "title||artist" -> track object
 const songIdMap  = new Map(); // "title||artist" -> deezer track id
 
+const ARTIST_MAPPING = {
+  'נעמי שמר': 'naomi shemer',
+  'שולי נתן': 'shuli natan',
+  'חוה אלברשטיין': 'chava alberstein',
+  'אריק איינשטיין': 'arik einstein',
+  'כוורת': 'kaveret',
+  'חלב ודבש': 'milk and honey milk & honey',
+  'גלי עטרי': 'gali atari',
+  'יזהר כהן': 'izhar cohen',
+  'אילנית': 'ilanit',
+  'מירי אלוני': 'miri aloni',
+  'אריק לביא': 'arik lavi',
+  'צביקה פיק': 'tsvika pick zvika pick svika pick',
+  'שלום חנוך': 'shalom hanoch',
+  'משינה': 'mashina',
+  'אהוד בנאי': 'ehud banai',
+  'זהבה בן': 'zehava ben',
+  'יהודה פוליקר': 'yehuda poliker',
+  'בנזין': 'benzene benzin',
+  'ריטה': 'rita',
+  'יהודית רביץ': 'yehudit ravitz',
+  'יצחק קלפטר': 'yitzhak klepter',
+  'זוהר ארגוב': 'zohar argov',
+  'עפרה חזה': 'ofra haza',
+  'אתניקס': 'ethnix',
+  'טיפקס': 'teapacks',
+  'אביב גפן': 'aviv gefen aviv geffen',
+  'קורין אלאל': 'corinne allal corinne alal',
+  'היהודים': 'hayehudim',
+  'מוניקה סקס': 'monica sex',
+  'אייל גולן': 'eyal golan',
+  'עברי לידר': 'ivri lider',
+  'הדג נחש': 'hadag nahash',
+  'מוקי': 'mooke mooki',
+  'חנן בן ארי': 'hanan ben ari',
+  'בית הבובות': 'beit habubot',
+  'אינפקציה': 'infection',
+  'איפה הילד': 'eifo hayeled',
+  'מאיר בנאי': 'meir banai',
+  'נטע ברזילי': 'netta barzilai netta',
+  'עדן חסון': 'eden hason eden hasson',
+  'עדן בן זקן': 'eden ben zaken eden ben zakin',
+  'עומר אדם': 'omer adam',
+  'פאר טסי': 'peer tasi',
+  'סטטיק ובן אל תבורי': 'static ben el tavori',
+  'אמיר דדון': 'amir dadon',
+  'חני פירסטנברג ושרית וינו-אלעד': 'chani furstenberg sarit vino elad',
+  'כנסיית השכל': 'knesiyat hasekhel knesiyat ha\'sekhel',
+  'שרית חדד': 'sarit hadad',
+  'אנה זק': 'anna zak',
+  'נועה קירל': 'noa kirel noah kirel',
+  'יסמין מועלם': 'yasmin moallem',
+  'תיסלם': 't-slam tslam'
+};
+
 function isArtistMatch(curated, api) {
   if (!curated || !api) return false;
   
@@ -60,6 +115,22 @@ function isArtistMatch(curated, api) {
   
   if (cleanCurated.includes(cleanApi) || cleanApi.includes(cleanCurated)) {
     return true;
+  }
+  
+  // Transliteration match using mapping
+  const mappedEnglish = ARTIST_MAPPING[curated];
+  if (mappedEnglish) {
+    const cleanMapped = clean(mappedEnglish);
+    if (cleanMapped.includes(cleanApi) || cleanApi.includes(cleanMapped)) {
+      return true;
+    }
+    
+    // Check word-by-word mapping overlap
+    const wordsMapped = mappedEnglish.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+    const splitWordsApi = api.toLowerCase().replace(/[\-\'\"\(\)\[\]\.\,\!\?]/g, '').split(/\s+/).filter(w => w.length >= 3);
+    if (wordsMapped.some(w => splitWordsApi.includes(w))) {
+      return true;
+    }
   }
   
   const splitWords = (s) => s.toLowerCase()

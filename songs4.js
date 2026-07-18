@@ -31,7 +31,7 @@ const SONGS4 = [
   { title: "רכבת לילה לקהיר", artist: "משינה", year: 1985 },
   { title: "שלח לי מלאך", artist: "משינה", year: 1987 },
   { title: "אהובתי", artist: "משינה", year: 1987 },
-  { title: "רחוב האגס 1", artist: "אהוד בנאי", year: 1987 },
+  { title: "האגס 1", artist: "אהוד בנאי", year: 1989 },
   { title: "עיר מקלט", artist: "אהוד בנאי", year: 1987 },
   { title: "טיפ טיפה", artist: "זהבה בן", year: 1992 },
   { title: "עיניים שלי", artist: "יהודה פוליקר", year: 1985 },
