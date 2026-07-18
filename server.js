@@ -21,6 +21,26 @@ function getLocalIP() {
   return 'localhost';
 }
 
+function getHost(req) {
+  if (process.env.HOST_URL) return process.env.HOST_URL;
+  
+  // On Vercel / Serverless hosting, use the request host and protocol
+  if (process.env.VERCEL || process.env.NOW_REGION) {
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    return `${protocol}://${req.headers.host}`;
+  }
+
+  // If accessed locally via localhost / 127.0.0.1, use LAN IP so phones on the same WiFi can connect
+  const host = req.headers.host || '';
+  if (host.includes('localhost') || host.includes('127.0.0.1') || host.includes('[::1]')) {
+    return `http://${getLocalIP()}:${PORT}`;
+  }
+
+  // Otherwise fallback to whatever protocol and host header are in the request
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  return `${protocol}://${host}`;
+}
+
 // ── Deezer track lookup (no API key needed) ───────────────────────────────────
 
 const trackCache = new Map(); // "title||artist" -> track object
@@ -158,7 +178,7 @@ app.get('/play', (req, res) => {
 });
 
 app.get('/api/song', async (req, res) => {
-  const HOST       = process.env.HOST_URL || `http://${getLocalIP()}:${PORT}`;
+  const HOST       = getHost(req);
   const excludeIds = new Set(req.query.exclude ? req.query.exclude.split(',') : []);
   const deckNum    = req.query.deck || '1';
 
