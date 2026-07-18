@@ -47,58 +47,58 @@ const trackCache = new Map(); // "title||artist" -> track object
 const songIdMap  = new Map(); // "title||artist" -> deezer track id
 
 const ARTIST_MAPPING = {
-  'נעמי שמר': 'naomi shemer',
-  'שולי נתן': 'shuli natan',
-  'חוה אלברשטיין': 'chava alberstein',
-  'אריק איינשטיין': 'arik einstein',
-  'כוורת': 'kaveret',
-  'חלב ודבש': 'milk and honey milk & honey',
-  'גלי עטרי': 'gali atari',
-  'יזהר כהן': 'izhar cohen',
-  'אילנית': 'ilanit',
-  'מירי אלוני': 'miri aloni',
-  'אריק לביא': 'arik lavi',
-  'צביקה פיק': 'tsvika pick zvika pick svika pick',
-  'שלום חנוך': 'shalom hanoch',
-  'משינה': 'mashina',
-  'אהוד בנאי': 'ehud banai',
-  'זהבה בן': 'zehava ben',
-  'יהודה פוליקר': 'yehuda poliker',
-  'בנזין': 'benzene benzin',
-  'ריטה': 'rita',
-  'יהודית רביץ': 'yehudit ravitz',
-  'יצחק קלפטר': 'yitzhak klepter',
-  'זוהר ארגוב': 'zohar argov',
-  'עפרה חזה': 'ofra haza',
-  'אתניקס': 'ethnix',
-  'טיפקס': 'teapacks',
-  'אביב גפן': 'aviv gefen aviv geffen',
-  'קורין אלאל': 'corinne allal corinne alal',
-  'היהודים': 'hayehudim',
-  'מוניקה סקס': 'monica sex',
-  'אייל גולן': 'eyal golan',
-  'עברי לידר': 'ivri lider',
-  'הדג נחש': 'hadag nahash',
-  'מוקי': 'mooke mooki',
-  'חנן בן ארי': 'hanan ben ari',
-  'בית הבובות': 'beit habubot',
-  'אינפקציה': 'infection',
-  'איפה הילד': 'eifo hayeled',
-  'מאיר בנאי': 'meir banai',
-  'נטע ברזילי': 'netta barzilai netta',
-  'עדן חסון': 'eden hason eden hasson',
-  'עדן בן זקן': 'eden ben zaken eden ben zakin',
-  'עומר אדם': 'omer adam',
-  'פאר טסי': 'peer tasi',
-  'סטטיק ובן אל תבורי': 'static ben el tavori',
-  'אמיר דדון': 'amir dadon',
-  'חני פירסטנברג ושרית וינו-אלעד': 'chani furstenberg sarit vino elad',
-  'כנסיית השכל': 'knesiyat hasekhel knesiyat ha\'sekhel',
-  'שרית חדד': 'sarit hadad',
-  'אנה זק': 'anna zak',
-  'נועה קירל': 'noa kirel noah kirel',
-  'יסמין מועלם': 'yasmin moallem',
-  'תיסלם': 't-slam tslam'
+  'נעמי שמר': { canonical: 'Naomi Shemer', synonyms: [] },
+  'שולי נתן': { canonical: 'Shuli Natan', synonyms: [] },
+  'חוה אלברשטיין': { canonical: 'Chava Alberstein', synonyms: [] },
+  'אריק איינשטיין': { canonical: 'Arik Einstein', synonyms: [] },
+  'כוורת': { canonical: 'Kaveret', synonyms: [] },
+  'חלב ודבש': { canonical: 'Milk and Honey', synonyms: ['milk & honey'] },
+  'גלי עטרי': { canonical: 'Gali Atari', synonyms: [] },
+  'יזהר כהן': { canonical: 'Izhar Cohen', synonyms: [] },
+  'אילנית': { canonical: 'Ilanit', synonyms: [] },
+  'מירי אלוני': { canonical: 'Miri Aloni', synonyms: [] },
+  'אריק לביא': { canonical: 'Arik Lavi', synonyms: [] },
+  'צביקה פיק': { canonical: 'Zvika Pick', synonyms: ['tsvika pick', 'svika pick'] },
+  'שלום חנוך': { canonical: 'Shalom Hanoch', synonyms: [] },
+  'משינה': { canonical: 'Mashina', synonyms: [] },
+  'אהוד בנאי': { canonical: 'Ehud Banai', synonyms: [] },
+  'זהבה בן': { canonical: 'Zehava Ben', synonyms: [] },
+  'יהודה פוליקר': { canonical: 'Yehuda Poliker', synonyms: [] },
+  'בנזין': { canonical: 'Benzin', synonyms: ['benzene'] },
+  'ריטה': { canonical: 'Rita', synonyms: [] },
+  'יהודית רביץ': { canonical: 'Yehudit Ravitz', synonyms: [] },
+  'יצחק קלפטר': { canonical: 'Yitzhak Klepter', synonyms: [] },
+  'זוהר ארגוב': { canonical: 'Zohar Argov', synonyms: [] },
+  'עפרה חזה': { canonical: 'Ofra Haza', synonyms: [] },
+  'אתניקס': { canonical: 'Ethnix', synonyms: [] },
+  'טיפקס': { canonical: 'Teapacks', synonyms: [] },
+  'אביב גפן': { canonical: 'Aviv Geffen', synonyms: ['aviv gefen'] },
+  'קורין אלאל': { canonical: 'Corinne Allal', synonyms: ['corinne alal'] },
+  'היהודים': { canonical: 'Hayehudim', synonyms: ['the jews'] },
+  'מוניקה סקס': { canonical: 'Monica Sex', synonyms: [] },
+  'אייל גולן': { canonical: 'Eyal Golan', synonyms: [] },
+  'עברי לידר': { canonical: 'Ivri Lider', synonyms: [] },
+  'הדג נחש': { canonical: 'Hadag Nahash', synonyms: [] },
+  'מוקי': { canonical: 'Mooki', synonyms: ['mooke'] },
+  'חנן בן ארי': { canonical: 'Hanan Ben Ari', synonyms: [] },
+  'בית הבובות': { canonical: 'Beit Habubot', synonyms: [] },
+  'אינפקציה': { canonical: 'Infection', synonyms: [] },
+  'איפה הילד': { canonical: 'Eifo HaYeled', synonyms: ['eifo hayeled'] },
+  'מאיר בנאי': { canonical: 'Meir Banai', synonyms: [] },
+  'נטע ברזילי': { canonical: 'Netta', synonyms: ['netta barzilai'] },
+  'עדן חסון': { canonical: 'Eden Hason', synonyms: ['eden hasson'] },
+  'עדן בן זקן': { canonical: 'Eden Ben Zaken', synonyms: ['eden ben zakin'] },
+  'עומר אדם': { canonical: 'Omer Adam', synonyms: [] },
+  'פאר טסי': { canonical: 'Peer Tasi', synonyms: [] },
+  'סטטיק ובן אל תבורי': { canonical: 'Static & Ben El Tavori', synonyms: ['static'] },
+  'אמיר דדון': { canonical: 'Amir Dadon', synonyms: [] },
+  'חני פירסטנברג ושרית וינו-אלעד': { canonical: 'Chani Furstenberg', synonyms: ['sarit vino-elad', 'sarit vino elad'] },
+  'כנסיית השכל': { canonical: 'Knesiyat Hasekhel', synonyms: ['knesiyat ha\'sekhel'] },
+  'שרית חדד': { canonical: 'Sarit Hadad', synonyms: [] },
+  'אנה זק': { canonical: 'Anna Zak', synonyms: [] },
+  'נועה קירל': { canonical: 'Noa Kirel', synonyms: ['noah kirel'] },
+  'יסמין מועלם': { canonical: 'Yasmin Moallem', synonyms: [] },
+  'תיסלם': { canonical: 'T-Slam', synonyms: ['tslam', 't slam'] }
 };
 
 function isArtistMatch(curated, api) {
@@ -118,18 +118,21 @@ function isArtistMatch(curated, api) {
   }
   
   // Transliteration match using mapping
-  const mappedEnglish = ARTIST_MAPPING[curated];
-  if (mappedEnglish) {
-    const cleanMapped = clean(mappedEnglish);
-    if (cleanMapped.includes(cleanApi) || cleanApi.includes(cleanMapped)) {
-      return true;
-    }
-    
-    // Check word-by-word mapping overlap
-    const wordsMapped = mappedEnglish.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
-    const splitWordsApi = api.toLowerCase().replace(/[\-\'\"\(\)\[\]\.\,\!\?]/g, '').split(/\s+/).filter(w => w.length >= 3);
-    if (wordsMapped.some(w => splitWordsApi.includes(w))) {
-      return true;
+  const mapping = ARTIST_MAPPING[curated];
+  if (mapping) {
+    const list = [mapping.canonical, ...mapping.synonyms];
+    for (const name of list) {
+      const cleanMapped = clean(name);
+      if (cleanMapped.includes(cleanApi) || cleanApi.includes(cleanMapped)) {
+        return true;
+      }
+      
+      // Check word-by-word mapping overlap
+      const wordsMapped = name.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+      const splitWordsApi = api.toLowerCase().replace(/[\-\'\"\(\)\[\]\.\,\!\?]/g, '').split(/\s+/).filter(w => w.length >= 3);
+      if (wordsMapped.some(w => splitWordsApi.includes(w))) {
+        return true;
+      }
     }
   }
   
@@ -148,9 +151,13 @@ async function findTrack(song) {
   const cacheKey = `${song.title}||${song.artist}`;
   if (trackCache.has(cacheKey)) return trackCache.get(cacheKey);
 
-  // Try two query styles to maximise hit rate
+  const canonicalArtist = ARTIST_MAPPING[song.artist]?.canonical || song.artist;
+
+  // Try multiple query styles to maximise hit rate
   const queries = [
+    `track:"${song.title}" artist:"${canonicalArtist}"`,
     `track:"${song.title}" artist:"${song.artist}"`,
+    `${song.title} ${canonicalArtist}`,
     `${song.title} ${song.artist}`,
   ];
 
