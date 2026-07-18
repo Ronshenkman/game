@@ -341,6 +341,7 @@ app.get('/api/song', async (req, res) => {
       year:       track.year,
       albumArt:   track.albumArt,
       hasPreview: !!track.previewUrl,
+      previewUrl: track.previewUrl,
     });
   } catch (err) {
     console.error('Song fetch error:', err.message);
