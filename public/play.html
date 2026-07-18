@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Hitster</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f0f1a;
+      color: #f0f0f0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+
+    /* loading */
+    #screen-loading { display: flex; flex-direction: column; align-items: center; gap: 16px; color: #888; }
+    .spinner { width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #e94560; border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* all screens share this wrapper */
+    .screen { display: none; flex-direction: column; align-items: center; gap: 32px; width: 100%; max-width: 340px; }
+    .screen.active { display: flex; }
+
+    /* big round button used across screens */
+    .big-btn {
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 3rem;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .12s;
+    }
+    .big-btn:active { transform: scale(.93); }
+
+    .btn-play  { background: linear-gradient(135deg, #e94560, #c0392b); box-shadow: 0 8px 32px rgba(233,69,96,.5); }
+    .btn-count { background: rgba(255,255,255,.08); border: 3px solid rgba(255,255,255,.15); font-weight: 900; color: #fff; font-size: 3.5rem; cursor: default; }
+    .btn-done  { background: rgba(255,255,255,.08); color: #27ae60; font-size: 3rem; cursor: default; }
+
+    .pulse { animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 8px 32px rgba(39,174,96,.4); }
+      50%      { box-shadow: 0 8px 48px rgba(39,174,96,.8); }
+    }
+
+    .label { font-size: 1rem; color: #888; }
+    .label b { color: #f0f0f0; }
+
+    /* progress bar */
+    .bar-wrap { width: 100%; height: 6px; background: rgba(255,255,255,.1); border-radius: 100px; overflow: hidden; }
+    .bar      { height: 100%; width: 0%; background: linear-gradient(90deg, #e94560, #f5a623); border-radius: 100px; transition: width .25s linear; }
+
+    .time { font-size: 1.5rem; font-weight: 900; color: #e94560; }
+
+    /* song reveal card */
+    .song-card { background: #1a1a2e; border-radius: 18px; padding: 24px; width: 100%; border: 1px solid rgba(255,255,255,.07); }
+    .song-title  { font-size: 1.25rem; font-weight: 800; margin-bottom: 4px; }
+    .song-artist { font-size: .9rem; color: #888; margin-bottom: 16px; }
+    .song-year   { font-size: 3.5rem; font-weight: 900; background: linear-gradient(135deg, #e94560, #f5a623); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+    .song-year-lbl { font-size: .7rem; color: #666; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; }
+
+    /* error */
+    #screen-error { color: #f99; padding: 24px; font-size: .95rem; }
+  </style>
+</head>
+<body>
+
+  <div id="screen-loading">
+    <div class="spinner"></div>
+    <span>Loading…</span>
+  </div>
+
+  <!-- SCREEN 1: tap play -->
+  <div class="screen" id="screen-ready">
+    <button class="big-btn btn-play" id="btnPlay" onclick="onPlay()">▶</button>
+    <div class="label">Tap to play</div>
+  </div>
+
+  <!-- SCREEN 2: 5s countdown -->
+  <div class="screen" id="screen-count">
+    <div class="big-btn btn-count" id="countNum">5</div>
+    <div class="label">Starting in…</div>
+  </div>
+
+  <!-- SCREEN 3: playing -->
+  <div class="screen" id="screen-playing">
+    <div class="big-btn btn-done pulse" style="color:#27ae60;">♫</div>
+    <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+    <div class="time"><span id="timeNum">15</span>s</div>
+  </div>
+
+  <!-- SCREEN 4: done + reveal -->
+  <div class="screen" id="screen-done">
+    <div class="big-btn btn-done">✓</div>
+    <div class="song-card" id="songCard">
+      <div class="song-title"  id="songTitle"></div>
+      <div class="song-artist" id="songArtist"></div>
+      <div class="song-year"   id="songYear"></div>
+      <div class="song-year-lbl">Release year</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: embed fallback (no preview URL) -->
+  <div class="screen" id="screen-embed">
+    <div class="label" style="font-size:.8rem;">No 30s preview — play via Spotify</div>
+    <iframe id="spotifyEmbed"
+      style="border-radius:12px; width:100%; height:152px; border:none;"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      loading="lazy"></iframe>
+  </div>
+
+  <div id="screen-error" style="display:none;"></div>
+
+<script>
+  const PLAY_SEC = 15;
+  const PRE_SEC  = 5;
+
+  let audio     = null;
+  let trackData = null;
+  let trackId   = null;
+
+  // ── helpers ───────────────────────────────────────────────────────────────
+
+  function show(id) {
+    document.getElementById('screen-loading').style.display = 'none';
+    ['screen-ready','screen-count','screen-playing','screen-done','screen-embed'].forEach(s => {
+      document.getElementById(s).classList.remove('active');
+    });
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+  }
+
+  function showEmbed() {
+    document.getElementById('spotifyEmbed').src =
+      `https://widget.deezer.com/widget/dark/track/${trackId}?autoplay=true`;
+    show('screen-embed');
+  }
+
+  function showError(msg) {
+    document.getElementById('screen-loading').style.display = 'none';
+    const el = document.getElementById('screen-error');
+    el.textContent = '⚠️ ' + msg;
+    el.style.display = 'block';
+  }
+
+  // ── init ──────────────────────────────────────────────────────────────────
+
+  async function init() {
+    trackId = new URLSearchParams(window.location.search).get('id');
+    if (!trackId) { showError('No track ID in URL.'); return; }
+
+    try {
+      const r = await fetch(`/api/preview/${trackId}`);
+      if (!r.ok) throw new Error();
+      trackData = await r.json();
+    } catch {
+      showError('Could not load song. Is the server running?');
+      return;
+    }
+
+    if (!trackData.previewUrl) {
+      showEmbed();
+      return;
+    }
+
+    audio = new Audio(trackData.previewUrl);
+    audio.preload = 'auto';
+
+    show('screen-ready');
+  }
+
+  // ── SCREEN 1 → tap play ───────────────────────────────────────────────────
+
+  function onPlay() {
+    // Unlock audio synchronously inside the tap event — required by iOS Safari.
+    // play() then immediately pause() registers the element as user-activated.
+    audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(() => {});
+
+    show('screen-count');
+    startPreCountdown();
+  }
+
+  // ── SCREEN 2 → 5s countdown ───────────────────────────────────────────────
+
+  function startPreCountdown() {
+    let left = PRE_SEC;
+    document.getElementById('countNum').textContent = left;
+
+    const t = setInterval(() => {
+      left--;
+      document.getElementById('countNum').textContent = left;
+      if (left <= 0) {
+        clearInterval(t);
+        startPlaying();
+      }
+    }, 1000);
+  }
+
+  // ── SCREEN 3 → playing 15s ───────────────────────────────────────────────
+
+  function startPlaying() {
+    show('screen-playing');
+
+    // Audio is already unlocked — this call will succeed
+    audio.currentTime = 0;
+    audio.play().catch(e => console.warn('play error:', e));
+
+    let left = PLAY_SEC;
+    updateBar(left);
+
+    const t = setInterval(() => {
+      left -= 0.25;
+      if (left <= 0) {
+        left = 0;
+        clearInterval(t);
+        audio.pause();
+        showDone();
+      }
+      updateBar(left);
+    }, 250);
+
+    // Also stop if the audio file ends naturally before 15s
+    audio.addEventListener('ended', () => { clearInterval(t); showDone(); }, { once: true });
+  }
+
+  function updateBar(left) {
+    const pct = ((PLAY_SEC - left) / PLAY_SEC) * 100;
+    document.getElementById('bar').style.width = pct + '%';
+    document.getElementById('timeNum').textContent = Math.ceil(left);
+  }
+
+  // ── SCREEN 4 → done ───────────────────────────────────────────────────────
+
+  function showDone() {
+    document.getElementById('songTitle').textContent  = trackData.title  || '';
+    document.getElementById('songArtist').textContent = trackData.artist || '';
+    document.getElementById('songYear').textContent   = trackData.year   || '';
+    show('screen-done');
+  }
+
+  init();
+</script>
+</body>
+</html>

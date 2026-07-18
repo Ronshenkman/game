@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hitster</title>
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --card-bg: #1a1a2e;
+      --accent: #e94560;
+      --accent2: #f5a623;
+      --text: #f0f0f0;
+      --muted: #888;
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    #app {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .site-header h1 {
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .site-header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      border: 1px solid rgba(255,255,255,0.07);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.45);
+    }
+
+    .card-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* ── Buttons ── */
+    button {
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 12px;
+      padding: 12px 18px;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      line-height: 1;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    button:disabled { opacity: 0.38; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #c0392b);
+      color: #fff;
+    }
+    .btn-primary:not(:disabled):hover { filter: brightness(1.12); }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .btn-ghost:not(:disabled):hover { background: rgba(255,255,255,0.13); }
+
+    .btn-danger {
+      background: rgba(233,69,96,0.18);
+      color: #f66;
+      border: 1px solid rgba(233,69,96,0.3);
+    }
+    .btn-danger:not(:disabled):hover { background: rgba(233,69,96,0.28); }
+
+    .btn-success {
+      background: rgba(46,204,113,0.18);
+      color: #4eda8a;
+      border: 1px solid rgba(46,204,113,0.3);
+    }
+    .btn-success:not(:disabled):hover { background: rgba(46,204,113,0.28); }
+
+    .btn-sm {
+      font-size: 0.8rem;
+      padding: 7px 12px;
+      border-radius: 8px;
+    }
+
+    .btn-xs {
+      font-size: 0.75rem;
+      padding: 5px 9px;
+      border-radius: 7px;
+    }
+
+    /* ── Setup Screen ── */
+    .setup-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .setup-card {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .team-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .team-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .team-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .team-name-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 600;
+      outline: none;
+      min-width: 0;
+    }
+
+    .team-name-input::placeholder { color: var(--muted); }
+
+    .setup-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* ── Game Layout ── */
+    .game-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .top-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 700px) {
+      .top-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── QR Card ── */
+    .qr-card .song-counter {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .qr-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .preview-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .preview-badge.no-preview { background: #444; }
+
+    .qr-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: white;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 0 auto 16px;
+      width: 220px;
+      height: 220px;
+    }
+
+    .qr-wrapper img {
+      width: 192px;
+      height: 192px;
+      display: block;
+    }
+
+    .qr-hint {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-bottom: 18px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #ddd;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .qr-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #aaa;
+      font-size: 0.8rem;
+      text-align: center;
+      width: 192px;
+      height: 192px;
+    }
+
+    /* ── Answer Section ── */
+    .answer-section {
+      background: rgba(255,255,255,0.04);
+      border-radius: 13px;
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .answer-section.blurred .answer-inner {
+      filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .answer-inner { transition: filter 0.35s ease; }
+
+    .answer-year {
+      font-size: 2.8rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .answer-title {
+      font-size: 0.97rem;
+      font-weight: 700;
+      margin-top: 5px;
+    }
+
+    .answer-artist {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .answer-tap {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .qr-card-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .qr-card-buttons button { flex: 1; }
+
+    /* ── Turn Card ── */
+    .turn-card .active-team-name {
+      font-size: 1.5rem;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .turn-card .active-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .turn-status {
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .turn-status b { color: var(--text); }
+
+    /* ── Placement Panel ── */
+    .placement-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 800px) {
+      .placement-panel { grid-template-columns: 1fr; }
+    }
+
+    .panel-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* ── Slot picker ── */
+    .slot-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .slot-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px dashed rgba(255,255,255,0.18);
+      border-radius: 9px;
+      padding: 9px 14px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.12s;
+      width: 100%;
+    }
+
+    .slot-btn:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.35);
+      color: var(--text);
+    }
+
+    .slot-btn.selected {
+      background: rgba(46,204,113,0.18);
+      border-color: #2ecc71;
+      color: #4eda8a;
+    }
+
+    .slot-btn.star-slot {
+      border-color: var(--accent2);
+      color: var(--accent2);
+      background: rgba(245,166,35,0.1);
+    }
+
+    .slot-btn.correct-slot {
+      background: rgba(46,204,113,0.2);
+      border-color: #2ecc71;
+      color: #4eda8a;
+    }
+
+    .slot-btn.wrong-slot {
+      background: rgba(233,69,96,0.18);
+      border-color: var(--accent);
+      color: #f88;
+    }
+
+    .timeline-song-card {
+      background: rgba(255,255,255,0.06);
+      border-radius: 9px;
+      padding: 9px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tsc-year {
+      font-size: 1.05rem;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .tsc-info { flex: 1; min-width: 0; }
+
+    .tsc-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tsc-artist {
+      font-size: 0.73rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Other teams guess section ── */
+    .guess-team-block {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.07);
+      margin-bottom: 10px;
+    }
+
+    .guess-team-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.04);
+      cursor: default;
+    }
+
+    .guess-team-body {
+      padding: 12px;
+    }
+
+    /* ── Timelines section ── */
+    .timelines-section {}
+
+    .timeline-row {
+      border-radius: 14px;
+      border: 2px solid rgba(255,255,255,0.07);
+      margin-bottom: 14px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .timeline-row.is-active {
+      border-width: 2px;
+    }
+
+    .timeline-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.03);
+      flex-wrap: wrap;
+    }
+
+    .team-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.97rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .active-badge {
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: var(--accent);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 100px;
+    }
+
+    .song-count {
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: nowrap;
+      margin-left: 4px;
+    }
+
+    .token-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+    }
+
+    .token-count {
+      font-size: 1.05rem;
+      font-weight: 900;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    .token-btn {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border-radius: 7px;
+      font-size: 1rem;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+
+    .token-btn:hover { background: rgba(255,255,255,0.15); }
+
+    .mic-btn {
+      font-size: 0.8rem;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: rgba(245,166,35,0.15);
+      color: var(--accent2);
+      border: 1px solid rgba(245,166,35,0.3);
+    }
+
+    .mic-btn:hover { background: rgba(245,166,35,0.25); }
+
+    .timeline-body {
+      padding: 14px 18px;
+      overflow-x: auto;
+    }
+
+    .timeline-strip {
+      display: flex;
+      gap: 10px;
+      min-height: 68px;
+      align-items: center;
+    }
+
+    .song-tile {
+      background: rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 10px 14px;
+      flex-shrink: 0;
+      min-width: 130px;
+      max-width: 170px;
+    }
+
+    .song-tile-year {
+      font-size: 1.1rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .song-tile-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .song-tile-artist {
+      font-size: 0.7rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .empty-timeline {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-style: italic;
+    }
+
+    /* ── Reveal results ── */
+    .result-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      background: rgba(255,255,255,0.03);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+    }
+
+    .result-badge {
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .result-badge.correct { color: #4eda8a; }
+    .result-badge.wrong   { color: #f66; }
+
+    .token-delta {
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 8px;
+    }
+
+    .token-delta.pos {
+      background: rgba(46,204,113,0.2);
+      color: #4eda8a;
+    }
+
+    .token-delta.neg {
+      background: rgba(233,69,96,0.2);
+      color: #f88;
+    }
+
+    .result-slot-label {
+      color: var(--muted);
+    }
+
+    /* ── Error banner ── */
+    .error-banner {
+      background: rgba(233,69,96,0.15);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 0.88rem;
+      color: #f99;
+      margin-bottom: 18px;
+    }
+
+    /* ── Misc ── */
+    .section-heading {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin: 20px 0;
+    }
+
+    /* ── Waiting state ── */
+    .waiting-note {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── Deck selector ── */
+    .deck-selector {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .deck-btn {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 14px 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      line-height: 1.35;
+      transition: all 0.15s;
+    }
+
+    .deck-btn:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.3);
+      color: var(--text);
+    }
+
+    .deck-btn.active {
+      background: rgba(233,69,96,0.15);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    /* ── Deck badge in game header ── */
+    .deck-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      background: rgba(233,69,96,0.2);
+      border: 1px solid rgba(233,69,96,0.4);
+      color: var(--accent);
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* Auto-direction for song titles/artists so Hebrew (Deck 4) renders
+       right-to-left while English decks stay left-to-right. */
+    .tsc-title, .tsc-artist,
+    .answer-title, .answer-artist,
+    .song-tile-title, .song-tile-artist {
+      unicode-bidi: plaintext;
+    }
+  </style>
+</head>
+<body>
+<div id="app">Loading…</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════
+   Constants
+═══════════════════════════════════════════ */
+const TEAM_COLORS = ['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22','#e91e63','#1abc9c'];
+const TEAM_NAMES  = ['Red','Blue','Green','Yellow','Purple','Orange','Pink','Teal'];
+const MAX_GROUPS  = 8;
+const DECK_SIZES  = { '1': 577, '2': 364, '3': 641, '4': 102 };
+
+let _id = 1;
+const newId = () => 'g' + (_id++);
+
+/* ═══════════════════════════════════════════
+   Played-songs persistence (localStorage)
+   — keyed by deck so each deck remembers
+     its own played IDs across reloads /
+     new games / resets.
+═══════════════════════════════════════════ */
+function loadPlayedIds(deck) {
+  try {
+    const raw = localStorage.getItem(`hitster.played.deck${deck}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+function savePlayedIds(deck, ids) {
+  try {
+    localStorage.setItem(`hitster.played.deck${deck}`, JSON.stringify(ids));
+  } catch {}
+}
+function clearPlayedIds(deck) {
+  try { localStorage.removeItem(`hitster.played.deck${deck}`); } catch {}
+}
+
+/* ═══════════════════════════════════════════
+   State
+═══════════════════════════════════════════ */
+let G = {
+  phase: 'setup',          // setup | qr | active | revealed
+  groups: [],              // [{ id, name, color, tokens, timeline:[{id,title,artist,year}] }]
+  currentGroupIdx: 0,
+  currentSong: null,       // { trackId, title, artist, year, qrCode, hasPreview }
+  placements: {},          // groupId -> slotIndex
+  openGuessIds: new Set(),
+  playedIds: loadPlayedIds('1'),
+  songCount: 0,
+  loading: false,
+  error: null,
+  revealTokenDeltas: {},   // groupId -> number
+  answerRevealed: false,
+  // snapshot of timeline at moment of reveal (for slot labels)
+  snapshotTimeline: [],
+  deck: '1',               // '1' or '2'
+};
+
+/* ═══════════════════════════════════════════
+   XSS helpers
+═══════════════════════════════════════════ */
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* ═══════════════════════════════════════════
+   Setup actions
+═══════════════════════════════════════════ */
+function addGroup() {
+  if (G.groups.length >= MAX_GROUPS) return;
+  const usedColors = G.groups.map(g => g.color);
+  const color = TEAM_COLORS.find(c => !usedColors.includes(c)) || TEAM_COLORS[G.groups.length % TEAM_COLORS.length];
+  const idx   = G.groups.length;
+  const name  = TEAM_NAMES[idx] || ('Team ' + (idx + 1));
+  G.groups.push({ id: newId(), name, color, tokens: 0, timeline: [] });
+  render();
+}
+
+function removeGroup(id) {
+  G.groups = G.groups.filter(g => g.id !== id);
+  render();
+}
+
+function selectDeck(d) {
+  G.deck = d;
+  // Switch the active played-list to the chosen deck's persisted list
+  G.playedIds = loadPlayedIds(d);
+  render();
+}
+
+function renameGroup(id, val) {
+  const g = G.groups.find(g => g.id === id);
+  if (g) g.name = val;
+  // no re-render (called from oninput)
+}
+
+/* ═══════════════════════════════════════════
+   Game actions
+═══════════════════════════════════════════ */
+function startGame() {
+  if (G.groups.length < 2) return;
+  G.groups.forEach(g => { g.tokens = 0; g.timeline = []; });
+  G.currentGroupIdx = 0;
+  // Preserve playedIds across new games (load from localStorage for chosen deck)
+  G.playedIds = loadPlayedIds(G.deck);
+  // If the deck has been fully played, auto-clear so we don't deadlock
+  if (G.playedIds.length >= DECK_SIZES[G.deck]) {
+    G.playedIds = [];
+    clearPlayedIds(G.deck);
+  }
+  G.songCount = 0;
+  G.phase = 'qr';
+  G.answerRevealed = false;
+  render();
+  loadSong();
+}
+
+async function loadSong() {
+  G.loading = true;
+  G.error = null;
+  G.currentSong = null;
+  G.answerRevealed = false;
+  render();
+
+  // If the entire deck has been played, auto-reset so the next request can succeed
+  if (G.playedIds.length >= DECK_SIZES[G.deck]) {
+    G.playedIds = [];
+    clearPlayedIds(G.deck);
+  }
+
+  const deckParam = `deck=${G.deck}`;
+  const exclude   = G.playedIds.length
+    ? `?${deckParam}&exclude=${G.playedIds.join(',')}`
+    : `?${deckParam}`;
+  try {
+    const resp = await fetch('/api/song' + exclude);
+    if (!resp.ok) {
+      const e = await resp.json().catch(() => ({}));
+      throw new Error(e.error || 'Failed to load song');
+    }
+    const song = await resp.json();
+    G.currentSong = song;
+    G.playedIds.push(song.trackId);
+    savePlayedIds(G.deck, G.playedIds);
+    G.songCount++;
+    G.error = null;
+  } catch(err) {
+    G.error = err.message || 'Network error — is the server running?';
+  } finally {
+    G.loading = false;
+    render();
+  }
+}
+
+function startPlacing() {
+  if (G.phase !== 'qr') return;
+  G.phase = 'active';
+  G.placements = {};
+  G.openGuessIds = new Set();
+  render();
+}
+
+function selectSlot(groupId, slotIdx) {
+  G.placements[groupId] = slotIdx;
+  render();
+}
+
+function toggleGuess(groupId) {
+  if (G.openGuessIds.has(groupId)) {
+    G.openGuessIds.delete(groupId);
+    // remove their placement too
+    delete G.placements[groupId];
+  } else {
+    G.openGuessIds.add(groupId);
+  }
+  render();
+}
+
+function skipSong() {
+  const ag = activeGroup();
+  if (!ag) return;
+  ag.tokens -= 2;
+  G.phase = 'qr';
+  G.placements = {};
+  G.openGuessIds = new Set();
+  render();
+  loadSong();
+}
+
+function revealSong() {
+  if (G.phase !== 'active') return;
+  const ag = activeGroup();
+  if (!ag) return;
+  const activePlacement = G.placements[ag.id];
+  if (activePlacement === undefined) return;
+
+  // snapshot the timeline before mutation
+  G.snapshotTimeline = ag.timeline.slice();
+
+  const year = G.currentSong.year;
+  const newSong = {
+    id:     G.currentSong.trackId,
+    title:  G.currentSong.title,
+    artist: G.currentSong.artist,
+    year:   G.currentSong.year,
+  };
+
+  function addToTimeline(group) {
+    group.timeline.push(Object.assign({}, newSong));
+    group.timeline.sort((a, b) => a.year - b.year);
+  }
+
+  // Active team: add card if placed correctly
+  const activeCorrect = isSlotCorrect(ag.timeline, activePlacement, year);
+  if (activeCorrect) addToTimeline(ag);
+
+  // Other teams: guessing always costs 1 token; correct guess also earns the card.
+  // Boundary tie-break: if the song year exactly equals a year already on the timeline,
+  // both adjacent slots are technically valid. In that case only the active team's
+  // chosen slot wins — a guessing team that picked the *other* valid slot does NOT
+  // get the card (the active team's turn takes priority).
+  G.revealTokenDeltas = {};
+  G.groups.forEach(g => {
+    if (g.id === ag.id) return;
+    const slotIdx = G.placements[g.id];
+    if (slotIdx === undefined) return;
+    g.tokens -= 1;
+    G.revealTokenDeltas[g.id] = -1;
+
+    const guessCorrect = isSlotCorrect(G.snapshotTimeline, slotIdx, year);
+    if (!guessCorrect) return; // wrong — no card
+
+    // Boundary tie-break: if the guesser picked a different slot from the active team
+    // AND the active team's slot is also correct, the active team's choice wins.
+    if (slotIdx !== activePlacement && activeCorrect) return;
+
+    addToTimeline(g);
+  });
+  G.phase = 'revealed';
+  render();
+}
+
+function nextTurn() {
+  G.currentGroupIdx = (G.currentGroupIdx + 1) % G.groups.length;
+  G.phase = 'qr';
+  G.placements = {};
+  G.openGuessIds = new Set();
+  G.revealTokenDeltas = {};
+  G.snapshotTimeline = [];
+  render();
+  loadSong();
+}
+
+function adjustTokens(groupId, delta) {
+  const g = G.groups.find(g => g.id === groupId);
+  if (g) { g.tokens += delta; render(); }
+}
+
+function grantToken(groupId) {
+  adjustTokens(groupId, 1);
+}
+
+function toggleReveal() {
+  if (!G.currentSong) return;
+  G.answerRevealed = !G.answerRevealed;
+  render();
+}
+
+async function reshuffleDeck() {
+  await fetch(`/api/reset-deck?deck=${G.deck}`, { method: 'POST' });
+  // Reshuffle is the explicit "forget what's been played" action
+  G.playedIds = [];
+  clearPlayedIds(G.deck);
+  G.error = null;
+  render();
+}
+
+function resetGame() {
+  if (!confirm('Reset to setup screen? All progress will be lost.')) return;
+  G.phase = 'setup';
+  G.groups.forEach(g => { g.tokens = 0; g.timeline = []; });
+  G.currentSong = null;
+  // Preserve playedIds across resets — songs stay marked played until the deck is fully exhausted
+  // (or until the user explicitly hits 🔀 Reshuffle Songs)
+  G.songCount = 0;
+  G.placements = {};
+  G.openGuessIds = new Set();
+  G.revealTokenDeltas = {};
+  G.snapshotTimeline = [];
+  G.answerRevealed = false;
+  G.loading = false;
+  G.error = null;
+  render();
+}
+
+/* ═══════════════════════════════════════════
+   Logic helpers
+═══════════════════════════════════════════ */
+function activeGroup() {
+  return G.groups[G.currentGroupIdx] || null;
+}
+
+function isSlotCorrect(timeline, slotIdx, year) {
+  const prevYear = slotIdx === 0 ? 0 : (timeline[slotIdx - 1] ? timeline[slotIdx - 1].year : 0);
+  const nextYear = slotIdx >= timeline.length ? 9999 : (timeline[slotIdx] ? timeline[slotIdx].year : 9999);
+  return year >= prevYear && year <= nextYear;
+}
+
+function slotLabel(timeline, slotIdx) {
+  if (timeline.length === 0) return 'Only position — first song';
+  if (slotIdx === 0) {
+    const first = timeline[0];
+    return `Before "${escHtml(first.title)}" (${first.year})`;
+  }
+  if (slotIdx >= timeline.length) {
+    const last = timeline[timeline.length - 1];
+    return `After "${escHtml(last.title)}" (${last.year})`;
+  }
+  const prev = timeline[slotIdx - 1];
+  const next = timeline[slotIdx];
+  return `Between ${prev.year} and ${next.year}`;
+}
+
+/* ═══════════════════════════════════════════
+   Render helpers
+═══════════════════════════════════════════ */
+function renderSlotPicker(timeline, groupId, selectedSlotIdx, readOnly, starSlotIdx) {
+  const slots = timeline.length + 1;
+  let html = '<div class="slot-picker">';
+  for (let i = 0; i < slots; i++) {
+    const label = slotLabel(timeline, i);
+    const isSelected = selectedSlotIdx === i;
+    const isStar = starSlotIdx === i;
+    let cls = 'slot-btn';
+    if (isSelected) cls += ' selected';
+    else if (isStar) cls += ' star-slot';
+    const onclick = readOnly ? '' : `onclick="selectSlot('${groupId}', ${i})"`;
+    const icon = isSelected ? '▶ ' : isStar ? '⭐ ' : (i === 0 ? '▲ ' : i === timeline.length ? '▼ ' : '↕ ');
+    html += `<button class="${cls}" ${onclick}>${icon}${label}</button>`;
+    if (i < timeline.length) {
+      const song = timeline[i];
+      html += `
+        <div class="timeline-song-card">
+          <span class="tsc-year" style="color:${escHtml(activeGroup()?.color || '#fff')}">${song.year}</span>
+          <div class="tsc-info">
+            <div class="tsc-title">${escHtml(song.title)}</div>
+            <div class="tsc-artist">${escHtml(song.artist)}</div>
+          </div>
+        </div>`;
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderSetup() {
+  const canAdd   = G.groups.length < MAX_GROUPS;
+  const canStart = G.groups.length >= 2;
+
+  let teamsHtml = '';
+  G.groups.forEach(g => {
+    teamsHtml += `
+      <div class="team-row">
+        <div class="team-dot" style="background:${escHtml(g.color)}"></div>
+        <input
+          class="team-name-input"
+          type="text"
+          value="${escHtml(g.name)}"
+          placeholder="Team name"
+          oninput="renameGroup('${g.id}', this.value)"
+          maxlength="24"
+        />
+        <button class="btn-danger btn-xs" onclick="removeGroup('${g.id}')">✕</button>
+      </div>`;
+  });
+
+  return `
+    <div class="site-header">
+      <h1>🎵 HITSTER</h1>
+      <p>Place songs on your timeline to win!</p>
+    </div>
+    <div class="setup-wrap">
+      <div class="card setup-card">
+        <div class="card-title">Setup — Teams</div>
+        <div class="team-list">${teamsHtml || '<p style="color:var(--muted);font-size:0.85rem">No teams yet. Add some below.</p>'}</div>
+        <div class="card-title" style="margin-top:4px">Choose Song Deck</div>
+        <div class="deck-selector">
+          ${['1','2','3','4'].map(d => {
+            const played = loadPlayedIds(d).length;
+            const total  = DECK_SIZES[d];
+            const remain = Math.max(0, total - played);
+            const label  = d === '4' ? 'Hebrew Deck' : d === '3' ? 'Rock Deck' : `Deck ${d}`;
+            return `
+              <button class="deck-btn${G.deck === d ? ' active' : ''}" onclick="selectDeck('${d}')">
+                🎵 ${label}<br>
+                <span style="font-size:0.75rem;font-weight:400;opacity:0.75">
+                  ${remain}/${total} songs remaining
+                </span>
+              </button>`;
+          }).join('')}
+        </div>
+        <div class="setup-actions">
+          <button class="btn-ghost" onclick="addGroup()" ${canAdd ? '' : 'disabled'}>+ Add Team</button>
+          <button class="btn-primary" onclick="startGame()" ${canStart ? '' : 'disabled'} style="flex:2">▶ Start Game</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderQRCard() {
+  const ag = activeGroup();
+  let qrContent;
+  if (G.loading) {
+    qrContent = `<div class="qr-placeholder"><div class="spinner"></div><span>Loading…</span></div>`;
+  } else if (G.error) {
+    qrContent = `<div class="qr-placeholder"><span style="font-size:2rem">⚠️</span><span style="font-size:0.75rem">${escHtml(G.error)}</span></div>`;
+  } else if (G.currentSong) {
+    qrContent = `<img src="${escHtml(G.currentSong.qrCode)}" alt="QR Code" />`;
+  } else {
+    qrContent = `<div class="qr-placeholder"><span style="font-size:2rem">🎵</span></div>`;
+  }
+
+  const previewCls = (G.currentSong && !G.currentSong.hasPreview) ? 'preview-badge no-preview' : 'preview-badge';
+  const previewTxt = G.currentSong
+    ? (G.currentSong.hasPreview ? 'Preview ✓' : 'No Preview')
+    : '';
+
+  // Answer area
+  const answerBlur = G.answerRevealed ? '' : ' blurred';
+  let answerInner;
+  if (G.currentSong) {
+    answerInner = `
+      <div class="answer-year">${G.currentSong.year}</div>
+      <div class="answer-title">${escHtml(G.currentSong.title)}</div>
+      <div class="answer-artist">${escHtml(G.currentSong.artist)}</div>`;
+  } else {
+    answerInner = `<span class="answer-tap">Answer hidden</span>`;
+  }
+
+  const canToggle = !!G.currentSong && !G.loading;
+
+  let actionButtons = '';
+  if (G.phase === 'qr') {
+    actionButtons = `
+      <button class="btn-ghost" onclick="toggleReveal()" ${canToggle ? '' : 'disabled'}>
+        ${G.answerRevealed ? '🙈 Hide' : '👁 Peek'}
+      </button>
+      <button class="btn-primary" onclick="skipSong()" ${G.loading ? 'disabled' : ''}>
+        ⏭ Skip (−2 🪙)
+      </button>`;
+  } else if (G.phase === 'active') {
+    actionButtons = `
+      <button class="btn-ghost" onclick="toggleReveal()" ${canToggle ? '' : 'disabled'}>
+        ${G.answerRevealed ? '🙈 Hide' : '👁 Peek'}
+      </button>
+      <button class="btn-danger" onclick="skipSong()">⏭ Skip (−2 🪙)</button>`;
+  } else if (G.phase === 'revealed') {
+    actionButtons = `
+      <button class="btn-ghost" style="flex:1" onclick="toggleReveal()" ${canToggle ? '' : 'disabled'}>
+        ${G.answerRevealed ? '🙈 Hide' : '👁 Peek'}
+      </button>`;
+  }
+
+  return `
+    <div class="card qr-card">
+      <div class="qr-header">
+        <span class="song-counter">Song #${G.songCount || 1}</span>
+        ${G.currentSong ? `<span class="${previewCls}">${previewTxt}</span>` : ''}
+      </div>
+      <div class="qr-wrapper">${qrContent}</div>
+      <p class="qr-hint">📱 Scan with your phone to hear the song</p>
+      <div class="answer-section${answerBlur}" onclick="toggleReveal()">
+        <div class="answer-inner">
+          ${G.currentSong
+            ? answerInner
+            : `<span class="answer-tap">👆 Tap to reveal year</span>`}
+        </div>
+      </div>
+      <div class="qr-card-buttons">${actionButtons}</div>
+    </div>`;
+}
+
+function renderTurnCard() {
+  const ag = activeGroup();
+  if (!ag) return '';
+
+  let statusContent = '';
+  let actionButton  = '';
+
+  if (G.phase === 'qr') {
+    statusContent = `<span class="waiting-note">Scan the QR code, then place the song on your timeline.</span>`;
+    const canPlace = !!G.currentSong && !G.loading;
+    actionButton = `<button class="btn-primary" style="width:100%" onclick="startPlacing()" ${canPlace ? '' : 'disabled'}>📍 Place Song</button>`;
+  } else if (G.phase === 'active') {
+    const activePlaced = G.placements[ag.id] !== undefined;
+    statusContent = activePlaced
+      ? `<b>✓ ${escHtml(ag.name)}</b> has chosen a slot.`
+      : `<b>${escHtml(ag.name)}</b> — pick a slot on your timeline below.`;
+    const canReveal = activePlaced;
+    actionButton = `<button class="btn-primary" style="width:100%" onclick="revealSong()" ${canReveal ? '' : 'disabled'}>🎉 Reveal Answer</button>`;
+  } else if (G.phase === 'revealed') {
+    statusContent = `Answer revealed! Check results below.`;
+    actionButton = `<button class="btn-primary" style="width:100%" onclick="nextTurn()">Next Turn →</button>`;
+  }
+
+  return `
+    <div class="card turn-card">
+      <div class="card-title">Current Turn</div>
+      <div class="active-team-name" style="color:${escHtml(ag.color)}">${escHtml(ag.name)}</div>
+      <div class="active-label">Active team — Song #${G.songCount}</div>
+      <div class="turn-status">${statusContent}</div>
+      ${actionButton}
+    </div>`;
+}
+
+function renderPlacementPanel() {
+  if (G.phase !== 'active' && G.phase !== 'revealed') return '';
+  const ag = activeGroup();
+  if (!ag) return '';
+
+  const timeline = G.snapshotTimeline.length > 0 ? G.snapshotTimeline : ag.timeline;
+  const activeSlot = G.placements[ag.id];
+  const isRevealed = G.phase === 'revealed';
+  const songYear   = G.currentSong ? G.currentSong.year : null;
+
+  // left: active team's picker
+  let leftHtml = `<div class="panel-title" style="color:${escHtml(ag.color)}">📍 ${escHtml(ag.name)}'s Timeline</div>`;
+  if (isRevealed && activeSlot !== undefined && songYear !== null) {
+    const correct = isSlotCorrect(G.snapshotTimeline, activeSlot, songYear);
+    leftHtml += `<p style="margin-bottom:10px;font-size:0.85rem">
+      Placed: <b>${slotLabel(G.snapshotTimeline, activeSlot)}</b>
+      <span style="color:${correct ? '#4eda8a' : '#f66'}">${correct ? ' ✓ Correct' : ' ✗ Wrong'}</span>
+    </p>`;
+    // show picker in read-only mode with color indicating result
+    leftHtml += renderRevealedPicker(timeline, ag.id, activeSlot, songYear, ag.color);
+  } else {
+    leftHtml += renderSlotPicker(
+      timeline,
+      ag.id,
+      activeSlot,
+      false,
+      undefined
+    );
+  }
+
+  // right: other teams guesses
+  const otherGroups = G.groups.filter(g => g.id !== ag.id);
+  let rightHtml = `<div class="panel-title">👥 Other Teams</div>`;
+  if (otherGroups.length === 0) {
+    rightHtml += `<p class="waiting-note">No other teams.</p>`;
+  } else {
+    otherGroups.forEach(g => {
+      const isOpen    = G.openGuessIds.has(g.id);
+      const guessSlot = G.placements[g.id];
+
+      if (isRevealed) {
+        // show result
+        if (guessSlot !== undefined && songYear !== null) {
+          const correct = isSlotCorrect(G.snapshotTimeline, guessSlot, songYear);
+          const delta = G.revealTokenDeltas[g.id] || 0;
+          const deltaClass = delta >= 0 ? 'pos' : 'neg';
+          const deltaTxt   = (delta >= 0 ? '+' : '') + delta + ' 🪙';
+          rightHtml += `
+            <div class="guess-team-block">
+              <div class="guess-team-header" style="border-left:3px solid ${escHtml(g.color)}">
+                <div class="dot" style="background:${escHtml(g.color)}"></div>
+                <b>${escHtml(g.name)}</b>
+                <span style="margin-left:auto;color:${correct ? '#4eda8a' : '#f66'}">${correct ? '✓' : '✗'}</span>
+                <span class="token-delta ${deltaClass}">${deltaTxt}</span>
+              </div>
+              <div class="guess-team-body" style="font-size:0.82rem;color:var(--muted)">
+                Guessed: ${slotLabel(G.snapshotTimeline, guessSlot)}
+              </div>
+            </div>`;
+        } else {
+          rightHtml += `
+            <div class="guess-team-block">
+              <div class="guess-team-header" style="border-left:3px solid ${escHtml(g.color)}">
+                <div class="dot" style="background:${escHtml(g.color)}"></div>
+                <b>${escHtml(g.name)}</b>
+                <span style="margin-left:auto;color:var(--muted)">Did not guess</span>
+              </div>
+            </div>`;
+        }
+      } else {
+        // active phase toggle
+        rightHtml += `
+          <div class="guess-team-block">
+            <div class="guess-team-header" style="border-left:3px solid ${escHtml(g.color)}">
+              <div class="dot" style="background:${escHtml(g.color)}"></div>
+              <b>${escHtml(g.name)}</b>
+              <button class="btn-sm ${isOpen ? 'btn-success' : 'btn-ghost'}" style="margin-left:auto" onclick="toggleGuess('${g.id}')">
+                ${isOpen ? '✓ Guessing' : '🎯 Guess'}
+              </button>
+            </div>
+            ${isOpen ? `<div class="guess-team-body">${renderSlotPicker(timeline, g.id, guessSlot, false, activeSlot)}</div>` : ''}
+          </div>`;
+      }
+    });
+  }
+
+  return `
+    <div class="card" style="margin-top:0">
+      <div class="card-title">Placement</div>
+      <div class="placement-panel">
+        <div>${leftHtml}</div>
+        <div>${rightHtml}</div>
+      </div>
+    </div>`;
+}
+
+function renderRevealedPicker(timeline, groupId, selectedSlot, songYear, teamColor) {
+  // read-only, highlights correct slots and chosen slot
+  const slots = timeline.length + 1;
+  let html = '<div class="slot-picker">';
+  for (let i = 0; i < slots; i++) {
+    const label = slotLabel(timeline, i);
+    const isSelected = selectedSlot === i;
+    const correct    = isSlotCorrect(timeline, i, songYear);
+    let cls = 'slot-btn';
+    if (isSelected && correct)  cls += ' correct-slot';
+    else if (isSelected)         cls += ' wrong-slot';
+    else if (correct)            cls += ' correct-slot';
+    const icon = correct ? '✓ ' : (isSelected ? '✗ ' : '  ');
+    html += `<button class="${cls}" disabled>${icon}${label}</button>`;
+    if (i < timeline.length) {
+      const song = timeline[i];
+      html += `
+        <div class="timeline-song-card">
+          <span class="tsc-year" style="color:${escHtml(teamColor)}">${song.year}</span>
+          <div class="tsc-info">
+            <div class="tsc-title">${escHtml(song.title)}</div>
+            <div class="tsc-artist">${escHtml(song.artist)}</div>
+          </div>
+        </div>`;
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderTimelines() {
+  const ag = activeGroup();
+  let html = `<div class="section-heading">📋 All Timelines</div>`;
+
+  G.groups.forEach(g => {
+    const isActive = ag && g.id === ag.id;
+    const borderStyle = isActive ? `border-color:${escHtml(g.color)}` : '';
+    const delta = G.revealTokenDeltas[g.id];
+    const hasDelta = delta !== undefined && delta !== 0;
+    const deltaClass = hasDelta ? (delta > 0 ? 'pos' : 'neg') : '';
+    const deltaTxt   = hasDelta ? ((delta > 0 ? '+' : '') + delta + ' 🪙') : '';
+
+    html += `
+      <div class="timeline-row${isActive ? ' is-active' : ''}" style="${borderStyle}">
+        <div class="timeline-header">
+          <div class="team-label">
+            <div class="dot" style="background:${escHtml(g.color)}"></div>
+            <input
+              class="team-name-input"
+              value="${escHtml(g.name)}"
+              oninput="renameGroup('${g.id}', this.value)"
+              maxlength="24"
+              style="color:${escHtml(g.color)}"
+            />
+            ${isActive ? '<span class="active-badge">Active</span>' : ''}
+            <span class="song-count" title="Songs on timeline">🃏 ${g.timeline.length}</span>
+          </div>
+          <div class="token-control">
+            <span style="font-size:0.78rem;color:var(--muted)">🪙</span>
+            <button class="token-btn" onclick="adjustTokens('${g.id}', -1)">−</button>
+            <span class="token-count">${g.tokens}</span>
+            <button class="token-btn" onclick="adjustTokens('${g.id}', 1)">+</button>
+            <button class="mic-btn btn-xs" onclick="grantToken('${g.id}')" title="Song name/artist correct">🎤 +1</button>
+            ${hasDelta ? `<span class="token-delta ${deltaClass}">${deltaTxt}</span>` : ''}
+          </div>
+        </div>
+        <div class="timeline-body">
+          <div class="timeline-strip">
+            ${g.timeline.length === 0
+              ? `<span class="empty-timeline">No songs yet</span>`
+              : g.timeline.map(s => `
+                  <div class="song-tile">
+                    <div class="song-tile-year" style="color:${escHtml(g.color)}">${s.year}</div>
+                    <div class="song-tile-title">${escHtml(s.title)}</div>
+                    <div class="song-tile-artist">${escHtml(s.artist)}</div>
+                  </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+  });
+
+  return html;
+}
+
+function renderGame() {
+  const errorHtml = G.error
+    ? `<div class="error-banner">⚠️ ${escHtml(G.error)}</div>`
+    : '';
+
+  return `
+    <div class="site-header">
+      <h1>🎵 HITSTER<span class="deck-badge">Deck ${G.deck}</span></h1>
+      <div class="header-actions">
+        <button class="btn-ghost btn-sm" onclick="reshuffleDeck()" title="Reshuffle songs without resetting scores">🔀 Reshuffle Songs</button>
+        <button class="btn-ghost btn-sm" onclick="resetGame()">↩ Reset</button>
+      </div>
+    </div>
+    <div class="game-wrap">
+      ${errorHtml}
+      <div class="top-grid">
+        ${renderQRCard()}
+        ${renderTurnCard()}
+      </div>
+      ${renderPlacementPanel()}
+      <div class="card">
+        ${renderTimelines()}
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   Root render
+═══════════════════════════════════════════ */
+function renderApp() {
+  if (G.phase === 'setup') return renderSetup();
+  return renderGame();
+}
+
+function render() {
+  document.getElementById('app').innerHTML = renderApp();
+}
+
+/* ── Boot ── */
+// Add two default teams to get going faster
+addGroup();
+addGroup();
+render();
+</script>
+</body>
+</html>
