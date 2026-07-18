@@ -97,15 +97,10 @@
     <div class="time"><span id="timeNum">15</span>s</div>
   </div>
 
-  <!-- SCREEN 4: done + reveal -->
+  <!-- SCREEN 4: done -->
   <div class="screen" id="screen-done">
     <div class="big-btn btn-done">✓</div>
-    <div class="song-card" id="songCard">
-      <div class="song-title"  id="songTitle"></div>
-      <div class="song-artist" id="songArtist"></div>
-      <div class="song-year"   id="songYear"></div>
-      <div class="song-year-lbl">Release year</div>
-    </div>
+    <div class="label">Time's up! Guess where this song fits on your timeline.</div>
   </div>
 
   <!-- SCREEN 5: embed fallback (no preview URL) -->
@@ -242,9 +237,6 @@
   // ── SCREEN 4 → done ───────────────────────────────────────────────────────
 
   function showDone() {
-    document.getElementById('songTitle').textContent  = trackData.title  || '';
-    document.getElementById('songArtist').textContent = trackData.artist || '';
-    document.getElementById('songYear').textContent   = trackData.year   || '';
     show('screen-done');
   }
 
