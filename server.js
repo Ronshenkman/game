@@ -212,6 +212,24 @@ app.get('/play', (req, res) => {
   res.sendFile('play.html', { root: __dirname + '/public' });
 });
 
+app.get('/api/deck/:deckNum', (req, res) => {
+  const dn = req.params.deckNum;
+  const source = dn === '4' ? SONGS4 : dn === '3' ? SONGS3 : dn === '2' ? SONGS2 : SONGS;
+  res.json(source);
+});
+
+app.get('/api/preview-song', async (req, res) => {
+  const { title, artist, year } = req.query;
+  if (!title || !artist) return res.status(400).json({ error: 'Missing title or artist' });
+  try {
+    const track = await findTrack({ title, artist, year: parseInt(year) || 2000 });
+    if (!track) return res.status(404).json({ error: 'Song not found' });
+    res.json(track);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to find preview' });
+  }
+});
+
 app.get('/api/song', async (req, res) => {
   const HOST       = getHost(req);
   const excludeIds = new Set(req.query.exclude ? req.query.exclude.split(',') : []);

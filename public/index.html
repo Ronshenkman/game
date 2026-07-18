@@ -764,8 +764,122 @@
        right-to-left while English decks stay left-to-right. */
     .tsc-title, .tsc-artist,
     .answer-title, .answer-artist,
-    .song-tile-title, .song-tile-artist {
+    .song-tile-title, .song-tile-artist,
+    .lib-title, .lib-artist {
       unicode-bidi: plaintext;
+    }
+
+    /* ── Library View ── */
+    .library-wrap {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .library-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .library-search {
+      width: 100%;
+      max-width: 320px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 10px 16px;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.15s;
+    }
+
+    .library-search:focus {
+      border-color: var(--accent);
+      background: rgba(255,255,255,0.1);
+    }
+
+    .library-table-container {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,0.07);
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.45);
+    }
+
+    .library-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.92rem;
+    }
+
+    .library-table th, .library-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      vertical-align: middle;
+    }
+
+    .library-table th {
+      background: rgba(255,255,255,0.02);
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+    }
+
+    .library-table tr:hover td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .library-play-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 0.85rem;
+      transition: all 0.12s;
+      padding: 0;
+    }
+
+    .library-play-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      transform: scale(1.05);
+    }
+
+    .library-play-btn.playing {
+      background: #27ae60;
+      border-color: #27ae60;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(39,174,96,0.5);
+    }
+
+    .library-play-btn.loading {
+      background: rgba(255,255,255,0.15);
+      border-color: transparent;
+      cursor: not-allowed;
+    }
+
+    .library-play-btn.loading .spinner-sm {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ddd;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
     }
   </style>
 </head>
@@ -785,6 +899,7 @@ const DECK_SIZES  = { '1': 577, '2': 364, '3': 641, '4': 102 };
 
 let _id = 1;
 const newId = () => 'g' + (_id++);
+let libAudio = null;
 
 /* ═══════════════════════════════════════════
    Played-songs persistence (localStorage)
@@ -811,7 +926,7 @@ function clearPlayedIds(deck) {
    State
 ═══════════════════════════════════════════ */
 let G = {
-  phase: 'setup',          // setup | qr | active | revealed
+  phase: 'setup',          // setup | qr | active | revealed | library
   groups: [],              // [{ id, name, color, tokens, timeline:[{id,title,artist,year}] }]
   currentGroupIdx: 0,
   currentSong: null,       // { trackId, title, artist, year, qrCode, hasPreview }
@@ -826,6 +941,12 @@ let G = {
   // snapshot of timeline at moment of reveal (for slot labels)
   snapshotTimeline: [],
   deck: '1',               // '1' or '2'
+  
+  // Library state
+  librarySongs: [],
+  librarySearchQuery: '',
+  libraryLoading: false,
+  libraryPlayingKey: null, // "title||artist"
 };
 
 /* ═══════════════════════════════════════════
@@ -1071,6 +1192,113 @@ function resetGame() {
 }
 
 /* ═══════════════════════════════════════════
+   Library actions
+═══════════════════════════════════════════ */
+async function openLibrary() {
+  G.phase = 'library';
+  G.libraryLoading = true;
+  G.librarySearchQuery = '';
+  G.librarySongs = [];
+  if (libAudio) {
+    libAudio.pause();
+    libAudio = null;
+  }
+  G.libraryPlayingKey = null;
+  render();
+
+  try {
+    const res = await fetch(`/api/deck/${G.deck}`);
+    if (res.ok) {
+      G.librarySongs = await res.json();
+    }
+  } catch (err) {
+    console.error('Failed to load library:', err);
+  } finally {
+    G.libraryLoading = false;
+    render();
+  }
+}
+
+function closeLibrary() {
+  if (libAudio) {
+    libAudio.pause();
+    libAudio = null;
+  }
+  G.libraryPlayingKey = null;
+  G.phase = 'setup';
+  render();
+}
+
+async function selectLibraryDeck(deckNum) {
+  G.deck = deckNum;
+  G.playedIds = loadPlayedIds(deckNum);
+  await openLibrary();
+}
+
+async function playLibrarySong(title, artist, year) {
+  const key = `${title}||${artist}`;
+  
+  if (G.libraryPlayingKey === key) {
+    if (libAudio) {
+      libAudio.pause();
+      libAudio = null;
+    }
+    G.libraryPlayingKey = null;
+    render();
+    return;
+  }
+  
+  if (libAudio) {
+    libAudio.pause();
+    libAudio = null;
+  }
+  
+  G.libraryPlayingKey = key;
+  render();
+  
+  try {
+    const res = await fetch(`/api/preview-song?title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}&year=${year}`);
+    if (!res.ok) throw new Error();
+    const track = await res.json();
+    
+    if (G.libraryPlayingKey === key) {
+      if (!track.previewUrl) {
+        alert('No 30-second preview available on Deezer for this song.');
+        G.libraryPlayingKey = null;
+        render();
+        return;
+      }
+      
+      libAudio = new Audio(track.previewUrl);
+      libAudio.play().catch(e => {
+        console.error('Audio play failed:', e);
+        alert('Failed to play audio. Try again.');
+        G.libraryPlayingKey = null;
+        render();
+      });
+      
+      libAudio.addEventListener('ended', () => {
+        G.libraryPlayingKey = null;
+        libAudio = null;
+        render();
+      });
+    }
+  } catch (err) {
+    console.error('Failed to play song preview:', err);
+    if (G.libraryPlayingKey === key) {
+      alert('Could not retrieve song preview from Deezer.');
+      G.libraryPlayingKey = null;
+      render();
+    }
+  }
+}
+
+function handleLibrarySearch(val) {
+  G.librarySearchQuery = val;
+  render();
+}
+
+/* ═══════════════════════════════════════════
    Logic helpers
 ═══════════════════════════════════════════ */
 function activeGroup() {
@@ -1178,6 +1406,7 @@ function renderSetup() {
         </div>
         <div class="setup-actions">
           <button class="btn-ghost" onclick="addGroup()" ${canAdd ? '' : 'disabled'}>+ Add Team</button>
+          <button class="btn-ghost" onclick="openLibrary()">👁 Library</button>
           <button class="btn-primary" onclick="startGame()" ${canStart ? '' : 'disabled'} style="flex:2">▶ Start Game</button>
         </div>
       </div>
@@ -1499,8 +1728,100 @@ function renderGame() {
 /* ═══════════════════════════════════════════
    Root render
 ═══════════════════════════════════════════ */
+function renderLibrary() {
+  let tableRows = '';
+  const query = G.librarySearchQuery.toLowerCase().trim();
+  
+  const filtered = G.librarySongs.filter(s => {
+    if (!query) return true;
+    return s.title.toLowerCase().includes(query) || s.artist.toLowerCase().includes(query) || String(s.year).includes(query);
+  });
+  
+  if (G.libraryLoading) {
+    tableRows = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:40px;">
+      <div class="spinner" style="margin: 0 auto 10px;"></div> Loading songs...
+    </td></tr>`;
+  } else if (filtered.length === 0) {
+    tableRows = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:40px;">No songs found.</td></tr>`;
+  } else {
+    filtered.forEach(s => {
+      const key = `${s.title}||${s.artist}`;
+      const isPlaying = G.libraryPlayingKey === key;
+      let btnCls = 'library-play-btn';
+      let icon = '▶';
+      
+      if (isPlaying) {
+        if (libAudio) {
+          btnCls += ' playing';
+          icon = '◼';
+        } else {
+          btnCls += ' loading';
+          icon = '<div class="spinner-sm"></div>';
+        }
+      }
+      
+      const escTitle = escHtml(s.title);
+      const escArtist = escHtml(s.artist);
+      
+      tableRows += `
+        <tr>
+          <td style="width:50px;">
+            <button class="${btnCls}" onclick="playLibrarySong('${escTitle.replace(/'/g, "\\'")}', '${escArtist.replace(/'/g, "\\'")}', ${s.year})">${icon}</button>
+          </td>
+          <td class="lib-title" style="font-weight:700;">${escTitle}</td>
+          <td class="lib-artist" style="color:var(--muted);">${escArtist}</td>
+          <td style="width:100px;text-align:right;font-weight:900;color:var(--accent);">${s.year}</td>
+        </tr>`;
+    });
+  }
+
+  return `
+    <div class="site-header">
+      <h1>🎵 SONG LIBRARY</h1>
+      <p>Browse all songs in the decks and listen to their previews</p>
+      <div class="header-actions">
+        <button class="btn-ghost btn-sm" onclick="closeLibrary()">↩ Back to Setup</button>
+      </div>
+    </div>
+    <div class="library-wrap">
+      <div class="library-header">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${['1','2','3','4'].map(d => {
+            const label = d === '4' ? 'Hebrew' : d === '3' ? 'Rock' : `Deck ${d}`;
+            const active = G.deck === d ? 'active' : '';
+            return `<button class="deck-btn ${active}" style="padding:10px 16px;border-radius:10px;font-size:0.85rem;" onclick="selectLibraryDeck('${d}')">${label}</button>`;
+          }).join('')}
+        </div>
+        <input 
+          class="library-search" 
+          type="text" 
+          placeholder="Search by title, artist, year..." 
+          value="${escHtml(G.librarySearchQuery)}" 
+          onfocus="this.select()"
+          oninput="handleLibrarySearch(this.value)"
+        />
+      </div>
+      <div class="library-table-container">
+        <table class="library-table">
+          <thead>
+            <tr>
+              <th>Play</th>
+              <th>Song Title</th>
+              <th>Artist</th>
+              <th style="text-align:right;">Year</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
 function renderApp() {
   if (G.phase === 'setup') return renderSetup();
+  if (G.phase === 'library') return renderLibrary();
   return renderGame();
 }
 
