@@ -3,6 +3,7 @@ const express = require('express');
 const QRCode  = require('qrcode');
 const axios   = require('axios');
 const os      = require('os');
+const path    = require('path');
 const SONGS   = require('./songs');
 const SONGS2  = require('./songs2');
 const SONGS3  = require('./songs3');
@@ -121,7 +122,7 @@ function nextFromDeck(excludeIds, deckNum) {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/api/reset-deck', (req, res) => {
   const deckNum = req.query.deck;
@@ -166,8 +167,9 @@ app.get('/api/song', async (req, res) => {
   for (let attempt = 0; attempt < 5; attempt++) {
     const candidate = nextFromDeck(excludeIds, deckNum);
     track = await findTrack(candidate).catch(() => null);
-    if (track) break;
-    console.warn(`Not found on Deezer, skipping… (${candidate.title})`);
+    if (track && !excludeIds.has(track.id)) break;
+    track = null; // Reset if excluded
+    console.warn(`Not found on Deezer or already played, skipping… (${candidate.title})`);
   }
 
   try {
@@ -212,9 +214,10 @@ app.get('/api/preview/:trackId', async (req, res) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 
-app.listen(PORT, '0.0.0.0', () => {
-  const ip = getLocalIP();
-  console.log(`
+if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    const ip = getLocalIP();
+    console.log(`
 🎵  HITSTER GAME  (powered by Deezer — no API key needed)
 ───────────────────────────────
    Local:   http://localhost:${PORT}
@@ -224,4 +227,7 @@ app.listen(PORT, '0.0.0.0', () => {
    QR codes use the Network URL — phone must be on same WiFi.
 ───────────────────────────────
 `);
-});
+  });
+}
+
+module.exports = app;
