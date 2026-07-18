@@ -901,6 +901,7 @@ let _id = 1;
 const newId = () => 'g' + (_id++);
 let libAudio = null;
 let resolvedTracks = {};
+let browserAudio = null;
 
 /* ═══════════════════════════════════════════
    Played-songs persistence (localStorage)
@@ -948,6 +949,7 @@ let G = {
   librarySearchQuery: '',
   libraryLoading: false,
   libraryPlayingKey: null, // "title||artist"
+  browserPlaying: false,
 };
 
 /* ═══════════════════════════════════════════
@@ -1015,6 +1017,7 @@ function startGame() {
 }
 
 async function loadSong() {
+  stopBrowserAudio();
   G.loading = true;
   G.error = null;
   G.currentSong = null;
@@ -1315,6 +1318,42 @@ async function openDeezerTrack(title, artist, year) {
   }
 }
 
+function stopBrowserAudio() {
+  if (browserAudio) {
+    browserAudio.pause();
+    browserAudio = null;
+  }
+  G.browserPlaying = false;
+}
+
+function togglePlayInBrowser() {
+  if (!G.currentSong || !G.currentSong.previewUrl) return;
+  
+  if (browserAudio) {
+    stopBrowserAudio();
+    render();
+    return;
+  }
+  
+  browserAudio = new Audio(G.currentSong.previewUrl);
+  G.browserPlaying = true;
+  render();
+  
+  browserAudio.play().catch(e => {
+    console.error('Audio play failed:', e);
+    alert('Failed to play audio in browser.');
+    G.browserPlaying = false;
+    browserAudio = null;
+    render();
+  });
+  
+  browserAudio.addEventListener('ended', () => {
+    G.browserPlaying = false;
+    browserAudio = null;
+    render();
+  });
+}
+
 function handleLibrarySearch(val) {
   G.librarySearchQuery = val;
   render();
@@ -1489,6 +1528,14 @@ function renderQRCard() {
       </button>`;
   }
 
+  const playBrowserBtn = G.currentSong && G.currentSong.hasPreview
+    ? `<div style="margin-top: 10px; margin-bottom: 5px; text-align: center;">
+        <button class="btn-ghost btn-sm" style="width: 85%; max-width: 260px;" onclick="togglePlayInBrowser()">
+          ${G.browserPlaying ? '◼ Stop Audio' : '🔊 Play in Browser'}
+        </button>
+       </div>`
+    : '';
+
   return `
     <div class="card qr-card">
       <div class="qr-header">
@@ -1497,6 +1544,7 @@ function renderQRCard() {
       </div>
       <div class="qr-wrapper">${qrContent}</div>
       <p class="qr-hint">📱 Scan with your phone to hear the song</p>
+      ${playBrowserBtn}
       <div class="answer-section${answerBlur}" onclick="toggleReveal()">
         <div class="answer-inner">
           ${G.currentSong
